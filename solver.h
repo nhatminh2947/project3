@@ -89,7 +89,7 @@ public:
 public:
     solver(const std::string &args) {
         // TODO: explore the tree and save the result
-	LUT.resize(2, std::vector<std::vector<std::vector<float>>>(262144, std::vector<std::vector<float>>(16, std::vector<float>(5))));
+	LUT.resize(2, std::vector<std::vector<std::vector<float>>>(262144, std::vector<std::vector<float>>(5, std::vector<float>(5))));
         Expectimax(0, Board(), -1, 7, 0);
         std::cout << "feel free to display some messages..." << std::endl;
     }
@@ -111,7 +111,7 @@ public:
 	long long bitboard = 0;
 	for(int i = 0; i < 6; i++) {
 		int value = board(i);
-		bitboard |= (value << i*4);
+		bitboard |= (value << i*3);
 	}
         return LUT[state][bitboard][hint][last];
     }
@@ -120,13 +120,13 @@ public:
 	long long bitboard = 0;
         for(int i = 0; i < 6; i++) {
                 int value = board(i);
-                bitboard |= (value << i*4);
+                bitboard |= (value << i*3);
         }
         LUT[state][bitboard][hint][last] = value;
     }
 
     float Expectimax(int state, Board board, int player_move, int bag, int hint) {
-        if (GetLookUpValue(state, board, hint, player_move) != 0
+	if (GetLookUpValue(state, board, hint, player_move) != 0
             || (hint != 0 && IsTerminal(board))) {
 		std::cout << "State: " << state % 2 << std::endl;
 	        std::cout << "Board: " << board << std::endl;
@@ -140,7 +140,7 @@ public:
         }
 
         float score;
-        if (state % 2 == 1) { // Max node - before state
+        if (state == 1) { // Max node - before state
             score = INT64_MIN;
 
             for (int d = 0; d < 4; ++d) { //direction
@@ -148,10 +148,10 @@ public:
                 child.Slide(d);
                 if (child == board) continue;
 
-                score = fmaxf(score, Expectimax(state + 1, child, d, bag, hint));
+                score = fmaxf(score, Expectimax(1 - state, child, d, bag, hint));
             }
 
-            SetLookUpValue(state % 2, board, hint, player_move + 1, score);
+            SetLookUpValue(state, board, hint, player_move + 1, score);
             return score;
         }
 
@@ -169,14 +169,14 @@ public:
                         child.Place(position, tile);
 
                         int child_bag = bag ^ (1 << (tile - 1));
-                        count_child_node++;
 		        if(child_bag == 0) {
 			    child_bag = 7;
 		        }
 		    
 		        for(int h = 1; h <= 3; h++) {
 			    if(((1 << (h - 1)) & child_bag) != 0) {
-	                    	score += Expectimax(state + 1, child, -1, child_bag, h);
+	                    	score += Expectimax(1 - state, child, -1, child_bag, h);
+				count_child_node++;
 			    }
 		    	}
                     }
@@ -193,7 +193,8 @@ public:
 
                 for(int h = 1; h <= 3; h++) {
                     if(((1 << (h - 1)) & child_bag) != 0) {
-                	score += Expectimax(state + 1, child, -1, child_bag, h);
+                	score += Expectimax(1 - state, child, -1, child_bag, h);
+			count_child_node++;
                     }
                 }
 	    }
