@@ -75,7 +75,7 @@ void InitLookUpTables() {
 
         for(int j=i+1; j<2; j++)
             cell[j] = cell[j+1];
-        cell[3] = 0;
+        cell[2] = 0;
 
         row_t result = row_t((cell[0] <<  0) |
                 (cell[1] <<  4) |
@@ -83,9 +83,11 @@ void InitLookUpTables() {
 
         row_t rev_result = reverse_row(result);
         unsigned rev_row = reverse_row(row);
-
-        row_left_table [    row] =                row  ^                result;
-        row_right_table[rev_row] =            rev_row  ^            rev_result;
+        if(rev_row == 1) {
+            std::cout << std::endl;
+        }
+        row_left_table [    row] =  row     ^   result;
+        row_right_table[rev_row] =  rev_row ^   rev_result;
     }
 
     for(unsigned col = 0; col < 256; ++col) {

@@ -21,4 +21,4 @@ static board_t col_up_table[256];
 static board_t col_down_table[256];
 static int score_table[4096];
 
-typedef std::tuple<unsigned int, float, unsigned int> tuple3;
+typedef std::tuple<int, float, int> tuple3;

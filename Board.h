@@ -60,9 +60,14 @@ public:
         return id;
     }
 
-    const board_t GetBoard() const {
-        return board_;
-    }
+    const board_t GetId() const {
+        int p = 1;
+        board_t id = 0;
+        for (int i = 0; i < 6; ++i) {
+            id += this->operator()(i) * p;
+            p *= 10;
+        }
+        return id;    }
 
     uint64_t info() const { return attr; }
     uint64_t info(uint64_t dat) { uint64_t old = attr; attr = dat; return old; }
@@ -170,15 +175,16 @@ public:
     }
 
     reward_t GetScore() {
-        return score_table[board_];
+        return score_table[board_ & ROW_MASK]
+        + score_table[(board_ >> 12) & ROW_MASK];
     }
 
 public:
     friend std::ostream &operator<<(std::ostream &out, const Board &b) {
         for (int i = 0; i < 6; i++) {
             int value = b(i);
-            if (value >= 3) {
-                value = pow(3, b(i) - 2);
+            if (value > 3) {
+                value = 3 * pow(2, b(i) - 3);
             }
 
             out << std::setw(std::min(i, 1)) << "" << value;
