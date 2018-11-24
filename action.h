@@ -14,7 +14,7 @@ public:
 	class place; // create a placing action with position and tile
 
 public:
-	virtual Board::reward apply(Board& b) const {
+	virtual reward_t apply(Board& b) const {
 		auto proto = entries().find(type());
 		if (proto != entries().end()) return proto->second->reinterpret(this).apply(b);
 		return -1;
@@ -56,7 +56,7 @@ public:
 	slide(unsigned oper) : action(slide::type | (oper & 0b11)) {}
 	slide(const action& a = {}) : action(a) {}
 public:
-	Board::reward apply(Board& b) const {
+	reward_t apply(Board& b) const {
 		return b.Slide(event());
 	}
 	std::ostream& operator >>(std::ostream& out) const {
@@ -89,7 +89,7 @@ public:
 	unsigned position() const { return event() & 0x0f; }
 	unsigned tile() const { return event() >> 4; }
 public:
-	Board::reward apply(Board& b) const {
+	reward_t apply(Board& b) const {
 		return b.Place(position(), tile());
 	}
 	std::ostream& operator >>(std::ostream& out) const {

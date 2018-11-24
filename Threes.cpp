@@ -10,15 +10,23 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <chrono>
+
 #include "Board.h"
 #include "solver.h"
+#include "PreCalculate.h"
 
 int main(int argc, const char* argv[]) {
-	freopen("out.txt", "w", stdout);
-
 	std::cout << "Threes-Project3: ";
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
 	std::cout << std::endl << std::endl;
+
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	InitLookUpTables();
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+	std::cout << "InitLookUpTables duration:" << duration << std::endl;
 
 	std::string solve_args;
 	int precision = 10;
@@ -31,15 +39,20 @@ int main(int argc, const char* argv[]) {
 		}
 	}
 
+	t1 = std::chrono::high_resolution_clock::now();
 	solver solve(solve_args);
+	t2 = std::chrono::high_resolution_clock::now();
+	duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+	std::cout << "Explore tree duration:" << duration << std::endl;
+
 	Board state;
 	state_type type;
-	state_hint hint(state);
+	int hint;
 	std::cout << std::setprecision(precision);
 	while (std::cin >> type >> state >> hint) {
-		auto value = solve.solve(state, type);
+		auto value = solve.solve(state, hint, type);
 		std::cout << type << " " << state << " " << hint;
-		std::cout << " = " << value << std::endl;
+		std::cout << " = " << std::get<0>(value) << " " << std::get<1>(value) << " " << std::get<2>(value) << std::endl;
 	}
 
 	return 0;
