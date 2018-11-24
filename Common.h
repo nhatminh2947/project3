@@ -13,6 +13,7 @@ typedef uint8_t cell_t;
 
 static const board_t ROW_MASK = 0xFFF;
 static const cell_t CELL_MASK = 0xF;
+static const board_t COL_MASK = 0x00F00F;
 
 static board_t row_left_table[4096];
 static board_t row_right_table[4096];

@@ -20,10 +20,18 @@ int ScoreRow(board_t row) {
     return score;
 }
 
+static board_t unpack_col(row_t col) {
+    board_t tmp = col;
+    return (tmp | (tmp << 8ULL)) & COL_MASK;
+}
+
 static row_t reverse_row(row_t row) {
     return (row >> 8) | (row & 0x0F0) | ((row << 8) & 0xF00);
 }
 
+static row_t reverse_col(row_t col) {
+    return (col >> 4) | ((col << 4) & 0xF0);
+}
 
 void InitLookUpTables() {
     for(unsigned row = 0; row < 4096; ++row) {
@@ -45,7 +53,7 @@ void InitLookUpTables() {
 
         int i;
 
-        for(i=0; i<3; i++) {
+        for(i=0; i<2; i++) {
             if(cell[i] == 0) {
                 cell[i] = cell[i+1];
                 break;
@@ -63,6 +71,8 @@ void InitLookUpTables() {
             }
         }
 
+        if(i == 2) continue;
+
         for(int j=i+1; j<3; j++)
             cell[j] = cell[j+1];
         cell[3] = 0;
@@ -76,5 +86,45 @@ void InitLookUpTables() {
 
         row_left_table [    row] =                row  ^                result;
         row_right_table[rev_row] =            rev_row  ^            rev_result;
+    }
+
+    for(unsigned col = 0; col < 256; ++col) {
+        unsigned cell[2] = {
+                (col >>  0) & 0xf,
+                (col >>  4) & 0xf
+        };
+
+        int i;
+
+        for(i=0; i<1; i++) {
+            if(cell[i] == 0) {
+                cell[i] = cell[i+1];
+                break;
+            } else if(cell[i] == 1 && cell[i+1] == 2) {
+                cell[i] = 3;
+                break;
+            } else if(cell[i] == 2 && cell[i+1] == 1) {
+                cell[i] = 3;
+                break;
+            } else if(cell[i] == cell[i+1] && cell[i] >= 3) {
+                if(cell[i] != 14) {
+                    cell[i]++;
+                }
+                break;
+            }
+        }
+
+        if(i == 1) continue;
+
+        cell[1] = 0;
+
+        row_t result = row_t((cell[0] <<  0) |
+                             (cell[1] <<  4));
+
+        row_t rev_result = reverse_col(result);
+        unsigned rev_col = reverse_col(col);
+
+        col_up_table  [    col] = unpack_col(col)       ^ unpack_col(result);
+        col_down_table[rev_col] = unpack_col(rev_col)   ^ unpack_col(rev_result);
     }
 }

@@ -141,12 +141,11 @@ public:
 
     reward_t SlideUp() {
         board_t ret = board_;
-        board_t transpose_board = ::Transpose(board_);
 
-        ret ^= col_up_table[(transpose_board >> 0) & ROW_MASK] << 0;
-        ret ^= col_up_table[(transpose_board >> 16) & ROW_MASK] << 4;
-        ret ^= col_up_table[(transpose_board >> 32) & ROW_MASK] << 8;
-        ret ^= col_up_table[(transpose_board >> 48) & ROW_MASK] << 12;
+        ret ^= col_up_table[this->operator()(0) | (this->operator()(3) << 4)] << 0;
+        ret ^= col_up_table[this->operator()(1) | (this->operator()(4) << 4)] << 4;
+        ret ^= col_up_table[this->operator()(2) | (this->operator()(5) << 4)] << 8;
+
         this->board_ = ret;
 
         return 0;
@@ -154,12 +153,11 @@ public:
 
     reward_t SlideDown() {
         board_t ret = board_;
-        board_t transpose_board = ::Transpose(board_);
 
-        ret ^= col_down_table[(transpose_board >> 0) & ROW_MASK] << 0;
-        ret ^= col_down_table[(transpose_board >> 16) & ROW_MASK] << 4;
-        ret ^= col_down_table[(transpose_board >> 32) & ROW_MASK] << 8;
-        ret ^= col_down_table[(transpose_board >> 48) & ROW_MASK] << 12;
+        ret ^= col_down_table[this->operator()(0) | (this->operator()(3) << 4)] << 0;
+        ret ^= col_down_table[this->operator()(1) | (this->operator()(4) << 4)] << 4;
+        ret ^= col_down_table[this->operator()(2) | (this->operator()(5) << 4)] << 8;
+
         this->board_ = ret;
 
         return 0;
