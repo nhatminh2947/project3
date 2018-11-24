@@ -73,7 +73,7 @@ void InitLookUpTables() {
 
         if(i == 2) continue;
 
-        for(int j=i+1; j<3; j++)
+        for(int j=i+1; j<2; j++)
             cell[j] = cell[j+1];
         cell[3] = 0;
 

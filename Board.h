@@ -50,8 +50,14 @@ public:
         return cell_t((board_ >> (i * 4)) & CELL_MASK);
     }
 
-    board_t GetBoard() {
-        return board_;
+    board_t GetId() {
+        int p = 1;
+        board_t id = 0;
+        for (int i = 0; i < 6; ++i) {
+            id += this->operator()(i) * p;
+            p *= 14;
+        }
+        return id;
     }
 
     const board_t GetBoard() const {

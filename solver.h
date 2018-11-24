@@ -91,7 +91,7 @@ public:
 public:
     solver(const std::string &args) {
         // TODO: explore the tree and save the result
-        LUT.resize(2, std::vector<std::vector<std::vector<tuple3>>>(16777216,
+        LUT.resize(2, std::vector<std::vector<std::vector<tuple3>>>(7529536,
                 std::vector<std::vector<tuple3>>(5,
                         std::vector<tuple3>(5, std::make_tuple(INT64_MAX, 0.0f, INT64_MIN)))));
 
@@ -100,11 +100,11 @@ public:
     }
 
     std::tuple<float, float, float> GetLookUpValue(int state, Board board, int hint, int last) {
-        return LUT[state][board.GetBoard()][hint][last];
+        return LUT[state][board.GetId()][hint][last];
     }
 
     void SetLookUpValue(int state, Board board, int hint, int last, std::tuple<float, float, float> value) {
-        LUT[state][board.GetBoard()][hint][last] = value;
+        LUT[state][board.GetId()][hint][last] = value;
     }
 
     std::tuple<float, float, float> Expectimax(int state, Board board, int player_move, int bag, int hint) {
