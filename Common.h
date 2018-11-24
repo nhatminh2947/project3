@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <tuple>
 
-typedef float reward_t;
+typedef int reward_t;
 typedef uint16_t row_t;
 typedef uint64_t board_t;
 typedef uint8_t cell_t;
@@ -21,4 +21,4 @@ static board_t col_up_table[256];
 static board_t col_down_table[256];
 static int score_table[4096];
 
-typedef std::tuple<int, float, int> tuple3;
+typedef std::tuple<float, float, float> tuple3;

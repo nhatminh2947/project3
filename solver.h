@@ -117,7 +117,7 @@ public:
         LUT[state][board.GetId()][hint - 1][last] = value;
     }
 
-    std::tuple<float, float, float> Expectimax(int state, Board board, int player_move, int bag, int hint) {
+    float Expectimax(int state, Board board, int player_move, int bag, int hint) {
 //        std::cout << "State: " << state % 2 << std::endl;
 //        std::cout << "Board: " << board << std::endl;
 //        std::cout << "last: " << player_move - 1 << std::endl;
@@ -126,50 +126,42 @@ public:
 //        std::cout << std::endl;
 
         if (board.GetId() != 0 && std::get<0>(GetLookUpValue(state, board, hint, player_move)) != INT32_MAX) {
-            return GetLookUpValue(state, board, hint, player_move);
+            return std::get<1>(GetLookUpValue(state, board, hint, player_move));
         }
-
         if(hint != 0 && IsTerminal(board)) {
-//            std::cout << "TERMINATED" << std::endl;
-//            std::cout << "State: " << state % 2 << std::endl;
-//            std::cout << "Board: " << board << std::endl;
-//            std::cout << "last: " << player_move - 1 << std::endl;
-//            std::cout << "bag: " << bag << std::endl;
-//            std::cout << "hint: " << hint << std::endl;
-//            std::cout << std::endl;
-
-            std::tuple<float, float, float> answer = std::make_tuple(0,
-                                                                     0,
-                                                                     0);
-
+            tuple3 answer = std::make_tuple(0, 0, 0);
             SetLookUpValue(state, board, hint, player_move, answer);
-
-            return answer;
+//            std::cout << "Board: " << board << std::endl;
+//            std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
+            return 0;
         }
 
-        tuple3 score;
         if (state == 1) { // Max node - before state
-            std::tuple<float, float, float> answer = std::make_tuple(INT64_MAX, 0, INT64_MIN);
-
+            tuple3 answer = std::make_tuple(INT64_MAX, 0, INT64_MIN);
+            int max_reward = -1;
             for (int d = 0; d < 4; ++d) { //direction
                 Board child = Board(board);
                 child.Slide(d);
                 if (child == board) continue;
-                float reward = child.GetScore() - board.GetScore();
+                float score = child.GetScore() - board.GetScore();
 
-                score = Expectimax(1 - state, child, d + 1, bag, hint);
+                float reward = score + Expectimax(1 - state, child, d + 1, bag, hint);
 
-                if (std::get<1>(score) + reward > std::get<1>(answer)) {
-                    answer = score;
+                if (reward > max_reward) {
+                    max_reward = reward;
                 }
             }
+            answer = std::make_tuple(max_reward, max_reward, max_reward);
 
             SetLookUpValue(state, board, hint, player_move, answer);
-            return answer;
+
+//            std::cout << "Board: " << board << std::endl;
+//            std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
+            return max_reward;
         }
 
         //Average node - after state
-        std::array<unsigned int, 6> positions = getPlacingPosition(player_move);
+        std::vector<int> positions = getPlacingPosition(player_move);
         tuple3 answer = std::make_tuple(INT64_MAX, 0, INT64_MIN);
 
         int count_child_node = 0;
@@ -178,7 +170,7 @@ public:
             if (hint != 0) {
                 Board child = Board(board);
                 child.Place(position, hint);
-                int reward = child.GetScore() - board.GetScore();
+                float score = child.GetScore() - board.GetScore();
 
                 int child_bag = bag ^(1 << (hint - 1));
                 if (child_bag == 0) {
@@ -187,11 +179,11 @@ public:
 
                 for (int h = 1; h <= 3; h++) {
                     if (((1 << (h - 1)) & child_bag) != 0) {
-                        score = Expectimax(1 - state, child, 0, child_bag, h);
+                        float reward = score + Expectimax(1 - state, child, 0, child_bag, h);
 
-                        answer = std::make_tuple(std::min(std::get<0>(answer), reward + std::get<0>(score)),
-                                                 std::get<1>(answer) + reward + std::get<1>(score),
-                                                 std::max(std::get<2>(answer), reward + std::get<2>(score)));
+                        answer = std::make_tuple(std::min(std::get<0>(answer), reward),
+                                                 std::get<1>(answer) + reward,
+                                                 std::max(std::get<2>(answer), reward));
 
                         count_child_node++;
                     }
@@ -201,7 +193,7 @@ public:
                     if (((1 << (tile - 1)) & bag) != 0) {
                         Board child = Board(board);
                         child.Place(position, tile);
-                        int reward = child.GetScore() - board.GetScore();
+                        float score = child.GetScore() - board.GetScore();
 
                         int child_bag = bag ^(1 << (tile - 1));
                         if (child_bag == 0) {
@@ -210,11 +202,11 @@ public:
 
                         for (int h = 1; h <= 3; h++) {
                             if (((1 << (h - 1)) & child_bag) != 0) {
-                                score = Expectimax(1 - state, child, 0, child_bag, h);
+                                float reward = Expectimax(1 - state, child, 0, child_bag, h);
 
-                                answer = std::make_tuple(std::min(std::get<0>(answer), reward + std::get<0>(score)),
-                                                         std::get<1>(answer) + reward + std::get<1>(score),
-                                                         std::max(std::get<2>(answer), reward + std::get<2>(score)));
+                                answer = std::make_tuple(std::min(std::get<0>(answer), reward),
+                                                         std::get<1>(answer) + reward,
+                                                         std::max(std::get<2>(answer), reward));
 
                                 count_child_node++;
                             }
@@ -225,29 +217,32 @@ public:
         }
 
         std::get<1>(answer) = std::get<1>(answer) / count_child_node;
+//        std::cout << "Board: " << board << std::endl;
+//        std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
+
         SetLookUpValue(state, board, hint, player_move, answer);
 
-        return answer;
+        return std::get<1>(answer);
     }
 
-    std::array<unsigned int, 6> getPlacingPosition(int player_move) {
+    std::vector<int> getPlacingPosition(int player_move) {
         if (player_move == 1) {
-            return {3, 4, 5};
+            return std::vector<int>{3, 4, 5};
         }
 
         if (player_move == 2) {
-            return {0, 3};
+            return std::vector<int>{0, 3};
         }
 
         if (player_move == 3) {
-            return {0, 1, 2};
+            return std::vector<int>{0, 1, 2};
         }
 
         if (player_move == 4) {
-            return {2, 5};
+            return std::vector<int>{2, 5};
         }
 
-        return {0, 1, 2, 3, 4, 5};
+        return std::vector<int>{0, 1, 2, 3, 4, 5};
     }
 
     bool IsTerminal(Board &board) {
