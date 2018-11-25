@@ -28,8 +28,8 @@ int main(int argc, const char* argv[]) {
 	InitLookUpTables();
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-//	std::cout << "InitLookUpTables duration:" << duration << std::endl;
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+	std::cout << "InitLookUpTables duration:" << duration << " ms" << std::endl;
 
 	std::string solve_args;
 	int precision = 10;
@@ -45,9 +45,9 @@ int main(int argc, const char* argv[]) {
 	t1 = std::chrono::high_resolution_clock::now();
 	solver solve(solve_args);
 	t2 = std::chrono::high_resolution_clock::now();
-	duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-//	std::cout << "Explore tree duration:" << duration << std::endl;
-
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+	std::cout << "Explore tree duration:" << duration << " ms" << std::endl << std::endl;
+	std::cout << "Input your test case" << std::endl;
 	Board state;
 	state_type type;
 	int hint;
