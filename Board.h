@@ -67,10 +67,34 @@ public:
             id += this->operator()(i) * p;
             p *= BASE;
         }
-        return id;    }
+        return id;
+    }
+
+    const bool IsValid() const {
+        for (int i = 0; i < 6; ++i) {
+            if(this->operator()(i) > BASE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool IsValid() {
+        for (int i = 0; i < 6; ++i) {
+            if(this->operator()(i) > BASE) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     uint64_t info() const { return attr; }
-    uint64_t info(uint64_t dat) { uint64_t old = attr; attr = dat; return old; }
+
+    uint64_t info(uint64_t dat) {
+        uint64_t old = attr;
+        attr = dat;
+        return old;
+    }
 
 public:
     bool operator==(const Board &b) const { return board_ == b.board_; }
@@ -176,7 +200,7 @@ public:
 
     reward_t GetScore() {
         return score_table[board_ & ROW_MASK]
-        + score_table[(board_ >> 12) & ROW_MASK];
+               + score_table[(board_ >> 12) & ROW_MASK];
     }
 
 public:
@@ -197,7 +221,7 @@ public:
             while (!std::isdigit(in.peek()) && in.good()) in.ignore(1);
             int value;
             in >> value;
-            if(value > 3) {
+            if (value > 3) {
                 value = std::log2(value / 3) + 3;
             }
 

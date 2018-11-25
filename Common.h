@@ -9,7 +9,7 @@
 typedef int reward_t;
 typedef uint16_t row_t;
 typedef uint64_t board_t;
-typedef uint8_t cell_t;
+typedef uint32_t cell_t;
 
 static const board_t ROW_MASK = 0xFFF;
 static const cell_t CELL_MASK = 0xF;

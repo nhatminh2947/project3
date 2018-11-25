@@ -50,11 +50,11 @@ int main(int argc, const char* argv[]) {
 	std::cout << "Input your test case" << std::endl;
 	Board state;
 	state_type type;
-	int hint;
+	state_hint hint(state);
 	std::cout << std::setprecision(precision);
 	while (std::cin >> type >> state >> hint) {
-		auto value = solve.solve(state, hint, type);
-		std::cout << type << " " << state << " +" << hint;
+		auto value = solve.solve(state, type);
+		std::cout << type << " " << state << hint;
 		if(std::get<0>(value) == INT32_MAX) {
             std::cout << " = -1" << std::endl;
 		}

@@ -45,11 +45,11 @@ private:
 
 class state_hint {
 public:
-    state_hint(const Board &state) : state(const_cast<Board &>(state)) {}
+    state_hint(const Board &board) : state(const_cast<Board &>(board)) {}
 
     char type() const { return state.info() ? state.info() + '0' : 'x'; }
 
-//    operator Board::cell() const { return state.info(); }
+    operator cell_t () const { return state.info(); }
 
 public:
     friend std::istream &operator>>(std::istream &in, state_hint &hint) {
@@ -67,7 +67,6 @@ public:
 private:
     Board &state;
 };
-
 
 class solver {
 public:
@@ -90,11 +89,11 @@ public:
 
 public:
     solver(const std::string &args) {
-        // TODO: explore the tree and save the result
-        after_state_lut.resize((unsigned long)(pow(BASE, 6)), std::vector<std::vector<tuple3>>(4, std::vector<tuple3>(5, std::make_tuple(
-                INT32_MAX, 0.0f, INT32_MIN))));
-
-        before_state_lut.resize((unsigned long)(pow(BASE, 6)), std::vector<tuple3>(4, std::make_tuple(INT32_MAX, 0.0f, INT32_MIN)));
+        after_state_lut.resize((unsigned long) (pow(BASE, 6)),
+                               std::vector<std::vector<tuple3>>(4, std::vector<tuple3>(5, std::make_tuple(
+                                       INT32_MAX, 0.0f, INT32_MIN))));
+        before_state_lut.resize((unsigned long) (pow(BASE, 6)),
+                                std::vector<tuple3>(4, std::make_tuple(INT32_MAX, 0.0f, INT32_MIN)));
 
         Expectimax(0, Board(), 0, 7, 0);
     }
@@ -241,23 +240,28 @@ public:
         return true;
     }
 
-    tuple3 solve(const Board &state, int hint, state_type type = state_type::before) {
+    tuple3 solve(const Board &state, state_type type = state_type::before) {
+        if (!state.IsValid()) {
+            return std::make_tuple(INT32_MAX, 0, INT32_MIN);
+        }
+
+        cell_t hint = state_hint(state);
         if (type.is_after()) {
+
             for (int last = 1; last < 4; ++last) {
                 tuple3 after_state_result = after_state_lut[state.GetId()][hint][last];
 
-                if(std::get<0>(after_state_result) != INT32_MAX) {
+                if (std::get<0>(after_state_result) != INT32_MAX) {
                     return after_state_result;
                 }
             }
             return std::make_tuple(INT32_MAX, 0, INT32_MIN);
-        } else {
+        } else if (type.is_before()) {
             return before_state_lut[state.GetId()][hint];
         }
     }
 
 private:
-    // TODO: place your transposition table here
     std::vector<std::vector<std::vector<tuple3>>> after_state_lut;
     std::vector<std::vector<tuple3>> before_state_lut;
 };
