@@ -55,7 +55,7 @@ public:
         board_t id = 0;
         for (int i = 0; i < 6; ++i) {
             id += this->operator()(i) * p;
-            p *= 10;
+            p *= BASE;
         }
         return id;
     }
@@ -65,7 +65,7 @@ public:
         board_t id = 0;
         for (int i = 0; i < 6; ++i) {
             id += this->operator()(i) * p;
-            p *= 10;
+            p *= BASE;
         }
         return id;    }
 

@@ -21,4 +21,6 @@ static board_t col_up_table[256];
 static board_t col_down_table[256];
 static int score_table[4096];
 
+static int BASE = 10;
+
 typedef std::tuple<float, float, float> tuple3;

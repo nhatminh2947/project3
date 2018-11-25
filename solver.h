@@ -45,7 +45,7 @@ private:
 
 class state_hint {
 public:
-    state_hint(const Board& state) : state(const_cast<Board&>(state)) {}
+    state_hint(const Board &state) : state(const_cast<Board &>(state)) {}
 
     char type() const { return state.info() ? state.info() + '0' : 'x'; }
 
@@ -91,78 +91,66 @@ public:
 public:
     solver(const std::string &args) {
         // TODO: explore the tree and save the result
-        LUT.resize(2, std::vector<std::vector<std::vector<tuple3>>>(1000000,
-                std::vector<std::vector<tuple3>>(3,
-                        std::vector<tuple3>(5, std::make_tuple(INT32_MAX, 0.0f, INT32_MIN)))));
+        after_state_lut.resize((unsigned long)(pow(BASE, 6)), std::vector<std::vector<tuple3>>(4, std::vector<tuple3>(5, std::make_tuple(
+                INT32_MAX, 0.0f, INT32_MIN))));
 
-//        for (int i = 0; i < 2; ++i) {
-//            for (int j = 0; j < 1000000; ++j) {
-//                for (int k = 0; k < 3; ++k) {
-//                    for (int l = 0; l < 5; ++l) {
-//                        LUT[i][j][k][l] = std::make_tuple(123456, 0.0f, -123456);
-//                    }
-//                }
-//            }
-//        }
+        before_state_lut.resize((unsigned long)(pow(BASE, 6)), std::vector<tuple3>(4, std::make_tuple(INT32_MAX, 0.0f, INT32_MIN)));
 
         Expectimax(0, Board(), 0, 7, 0);
-        std::cout << "feel free to display some messages..." << std::endl;
     }
 
-    std::tuple<float, float, float> GetLookUpValue(int state, Board board, int hint, int last) {
-        return LUT[state][board.GetId()][hint - 1][last];
+    tuple3 GetLookUpValue(int state, Board board, int hint, int last) {
+        if (state == 0) {
+            return after_state_lut[board.GetId()][hint][last];
+        }
+        return before_state_lut[board.GetId()][hint];
     }
 
     void SetLookUpValue(int state, Board board, int hint, int last, std::tuple<float, float, float> value) {
-        LUT[state][board.GetId()][hint - 1][last] = value;
+        if (state == 0) {
+            after_state_lut[board.GetId()][hint][last] = value;
+        } else before_state_lut[board.GetId()][hint] = value;
     }
 
-    float Expectimax(int state, Board board, int player_move, int bag, int hint) {
-//        std::cout << "State: " << state % 2 << std::endl;
-//        std::cout << "Board: " << board << std::endl;
-//        std::cout << "last: " << player_move - 1 << std::endl;
-//        std::cout << "bag: " << bag << std::endl;
-//        std::cout << "hint: " << hint << std::endl;
-//        std::cout << std::endl;
-
+    tuple3 Expectimax(int state, Board board, int player_move, int bag, int hint) {
         if (board.GetId() != 0 && std::get<0>(GetLookUpValue(state, board, hint, player_move)) != INT32_MAX) {
-            return std::get<1>(GetLookUpValue(state, board, hint, player_move));
+            return GetLookUpValue(state, board, hint, player_move);
         }
-        if(hint != 0 && IsTerminal(board)) {
+
+        if (hint != 0 && IsTerminal(board)) {
             tuple3 answer = std::make_tuple(0, 0, 0);
             SetLookUpValue(state, board, hint, player_move, answer);
-//            std::cout << "Board: " << board << std::endl;
-//            std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
-            return 0;
+
+            return answer;
         }
 
         if (state == 1) { // Max node - before state
-            tuple3 answer = std::make_tuple(INT64_MAX, 0, INT64_MIN);
-            int max_reward = -1;
+            tuple3 answer = std::make_tuple(INT32_MAX, 0, INT32_MIN);
+            float max_reward = -1;
             for (int d = 0; d < 4; ++d) { //direction
                 Board child = Board(board);
                 child.Slide(d);
                 if (child == board) continue;
                 float score = child.GetScore() - board.GetScore();
 
-                float reward = score + Expectimax(1 - state, child, d + 1, bag, hint);
+                tuple3 expect = Expectimax(1 - state, child, d + 1, bag, hint);
 
-                if (reward > max_reward) {
-                    max_reward = reward;
+                if (score + std::get<1>(expect) > max_reward) {
+                    max_reward = score + std::get<1>(expect);
+                    answer = std::make_tuple(score + std::get<0>(expect),
+                                             score + std::get<1>(expect),
+                                             score + std::get<2>(expect));
                 }
             }
-            answer = std::make_tuple(max_reward, max_reward, max_reward);
 
             SetLookUpValue(state, board, hint, player_move, answer);
 
-//            std::cout << "Board: " << board << std::endl;
-//            std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
-            return max_reward;
+            return answer;
         }
 
         //Average node - after state
         std::vector<int> positions = getPlacingPosition(player_move);
-        tuple3 answer = std::make_tuple(INT64_MAX, 0, INT64_MIN);
+        tuple3 answer = std::make_tuple(INT32_MAX, 0, INT32_MIN);
 
         int count_child_node = 0;
         for (unsigned int position : positions) {
@@ -179,11 +167,11 @@ public:
 
                 for (int h = 1; h <= 3; h++) {
                     if (((1 << (h - 1)) & child_bag) != 0) {
-                        float reward = score + Expectimax(1 - state, child, 0, child_bag, h);
+                        tuple3 expect = Expectimax(1 - state, child, 0, child_bag, h);
 
-                        answer = std::make_tuple(std::min(std::get<0>(answer), reward),
-                                                 std::get<1>(answer) + reward,
-                                                 std::max(std::get<2>(answer), reward));
+                        answer = std::make_tuple(std::min(std::get<0>(answer), score + std::get<0>(expect)),
+                                                 std::get<1>(answer) + score + std::get<1>(expect),
+                                                 std::max(std::get<2>(answer), score + std::get<2>(expect)));
 
                         count_child_node++;
                     }
@@ -202,11 +190,11 @@ public:
 
                         for (int h = 1; h <= 3; h++) {
                             if (((1 << (h - 1)) & child_bag) != 0) {
-                                float reward = Expectimax(1 - state, child, 0, child_bag, h);
+                                tuple3 expect = Expectimax(1 - state, child, 0, child_bag, h);
 
-                                answer = std::make_tuple(std::min(std::get<0>(answer), reward),
-                                                         std::get<1>(answer) + reward,
-                                                         std::max(std::get<2>(answer), reward));
+                                answer = std::make_tuple(std::min(std::get<0>(answer), score + std::get<0>(expect)),
+                                                         std::get<1>(answer) + score + std::get<1>(expect),
+                                                         std::max(std::get<2>(answer), score + std::get<2>(expect)));
 
                                 count_child_node++;
                             }
@@ -217,12 +205,9 @@ public:
         }
 
         std::get<1>(answer) = std::get<1>(answer) / count_child_node;
-//        std::cout << "Board: " << board << std::endl;
-//        std::cout << std::get<0>(answer) << " " << std::get<1>(answer) << " " << std::get<2>(answer) << std::endl;
-
         SetLookUpValue(state, board, hint, player_move, answer);
 
-        return std::get<1>(answer);
+        return answer;
     }
 
     std::vector<int> getPlacingPosition(int player_move) {
@@ -256,26 +241,23 @@ public:
         return true;
     }
 
-    std::tuple<float, float, float> solve(const Board &state, int hint, state_type type = state_type::before) {
-        // TODO: find the answer in the lookup table and return it
-        //       do NOT recalculate the tree at here
+    tuple3 solve(const Board &state, int hint, state_type type = state_type::before) {
+        if (type.is_after()) {
+            for (int last = 1; last < 4; ++last) {
+                tuple3 after_state_result = after_state_lut[state.GetId()][hint][last];
 
-        // to fetch the hint (if type == state_type::after, hint will be 0)
-//		board::cell hint = state_hint(state);
-
-        // for a legal state, return its three values.
-//		return { min, avg, max };
-        // for an illegal state, simply return {}
-        if(type.is_after()) {
-            return LUT[0][state.GetId()][hint-1][0];
+                if(std::get<0>(after_state_result) != INT32_MAX) {
+                    return after_state_result;
+                }
+            }
+            return std::make_tuple(INT32_MAX, 0, INT32_MIN);
+        } else {
+            return before_state_lut[state.GetId()][hint];
         }
-        else {
-            return LUT[1][state.GetId()][hint-1][0];
-        }
-        return {};
     }
 
 private:
     // TODO: place your transposition table here
-    std::vector<std::vector<std::vector<std::vector<tuple3>>>> LUT;
+    std::vector<std::vector<std::vector<tuple3>>> after_state_lut;
+    std::vector<std::vector<tuple3>> before_state_lut;
 };
