@@ -112,6 +112,10 @@ public:
     }
 
     tuple3 Expectimax(int state, Board board, int player_move, int bag, int hint) {
+        if(board.IsValid() == false) {
+            std::cout << board << std::endl;
+        }
+
         if (board.GetId() != 0 && std::get<0>(GetLookUpValue(state, board, hint, player_move)) != INT32_MAX) {
             return GetLookUpValue(state, board, hint, player_move);
         }
@@ -241,11 +245,12 @@ public:
     }
 
     tuple3 solve(const Board &state, state_type type = state_type::before) {
-        if (!state.IsValid()) {
+        cell_t hint = state_hint(state);
+
+        if (!state.IsValid() || hint > 3 || hint < 1) {
             return std::make_tuple(INT32_MAX, 0, INT32_MIN);
         }
 
-        cell_t hint = state_hint(state);
         if (type.is_after()) {
 
             for (int last = 1; last < 4; ++last) {

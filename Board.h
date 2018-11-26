@@ -72,7 +72,7 @@ public:
 
     const bool IsValid() const {
         for (int i = 0; i < 6; ++i) {
-            if(this->operator()(i) > BASE) {
+            if(this->operator()(i) >= BASE) {
                 return false;
             }
         }
@@ -81,7 +81,7 @@ public:
 
     bool IsValid() {
         for (int i = 0; i < 6; ++i) {
-            if(this->operator()(i) > BASE) {
+            if(this->operator()(i) >= BASE) {
                 return false;
             }
         }
