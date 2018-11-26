@@ -49,7 +49,7 @@ public:
 
     char type() const { return state.info() ? state.info() + '0' : 'x'; }
 
-    operator cell_t () const { return state.info(); }
+    operator cell_t() const { return state.info(); }
 
 public:
     friend std::istream &operator>>(std::istream &in, state_hint &hint) {
@@ -112,7 +112,7 @@ public:
     }
 
     tuple3 Expectimax(int state, Board board, int player_move, int bag, int hint) {
-        if(board.IsValid() == false) {
+        if (board.IsValid() == false) {
             std::cout << board << std::endl;
         }
 
@@ -264,6 +264,8 @@ public:
         } else if (type.is_before()) {
             return before_state_lut[state.GetId()][hint];
         }
+
+        return std::make_tuple(INT32_MAX, 0, INT32_MIN);
     }
 
 private:

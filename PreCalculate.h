@@ -34,11 +34,11 @@ static row_t reverse_col(row_t col) {
 }
 
 void InitLookUpTables() {
-    for(unsigned row = 0; row < 4096; ++row) {
+    for (unsigned row = 0; row < 4096; ++row) {
         unsigned cell[3] = {
-                (row >>  0) & 0xf,
-                (row >>  4) & 0xf,
-                (row >>  8) & 0xf
+                (row >> 0) & 0xf,
+                (row >> 4) & 0xf,
+                (row >> 8) & 0xf
         };
 
         // Score
@@ -46,87 +46,87 @@ void InitLookUpTables() {
         for (int i = 0; i < 3; ++i) {
             int rank = cell[i];
             if (rank >= 3) {
-                score += powf(3, rank-2);
+                score += powf(3, rank - 2);
             }
         }
         score_table[row] = score;
 
         int i;
 
-        for(i=0; i<2; i++) {
-            if(cell[i] == 0) {
-                cell[i] = cell[i+1];
+        for (i = 0; i < 2; i++) {
+            if (cell[i] == 0) {
+                cell[i] = cell[i + 1];
                 break;
-            } else if(cell[i] == 1 && cell[i+1] == 2) {
+            } else if (cell[i] == 1 && cell[i + 1] == 2) {
                 cell[i] = 3;
                 break;
-            } else if(cell[i] == 2 && cell[i+1] == 1) {
+            } else if (cell[i] == 2 && cell[i + 1] == 1) {
                 cell[i] = 3;
                 break;
-            } else if(cell[i] == cell[i+1] && cell[i] >= 3) {
-                if(cell[i] != 14) {
+            } else if (cell[i] == cell[i + 1] && cell[i] >= 3) {
+                if (cell[i] != 14) {
                     cell[i]++;
                 }
                 break;
             }
         }
 
-        if(i == 2) continue;
+        if (i == 2) continue;
 
-        for(int j=i+1; j<2; j++)
-            cell[j] = cell[j+1];
+        for (int j = i + 1; j < 2; j++)
+            cell[j] = cell[j + 1];
         cell[2] = 0;
 
-        row_t result = row_t((cell[0] <<  0) |
-                (cell[1] <<  4) |
-                (cell[2] <<  8));
+        row_t result = row_t((cell[0] << 0) |
+                             (cell[1] << 4) |
+                             (cell[2] << 8));
 
         row_t rev_result = reverse_row(result);
         unsigned rev_row = reverse_row(row);
-        if(rev_row == 1) {
+        if (rev_row == 1) {
             std::cout << std::endl;
         }
-        row_left_table [    row] =  row     ^   result;
-        row_right_table[rev_row] =  rev_row ^   rev_result;
+        row_left_table[row] = row ^ result;
+        row_right_table[rev_row] = rev_row ^ rev_result;
     }
 
-    for(unsigned col = 0; col < 256; ++col) {
+    for (unsigned col = 0; col < 256; ++col) {
         unsigned cell[2] = {
-                (col >>  0) & 0xf,
-                (col >>  4) & 0xf
+                (col >> 0) & 0xf,
+                (col >> 4) & 0xf
         };
 
         int i;
 
-        for(i=0; i<1; i++) {
-            if(cell[i] == 0) {
-                cell[i] = cell[i+1];
+        for (i = 0; i < 1; i++) {
+            if (cell[i] == 0) {
+                cell[i] = cell[i + 1];
                 break;
-            } else if(cell[i] == 1 && cell[i+1] == 2) {
+            } else if (cell[i] == 1 && cell[i + 1] == 2) {
                 cell[i] = 3;
                 break;
-            } else if(cell[i] == 2 && cell[i+1] == 1) {
+            } else if (cell[i] == 2 && cell[i + 1] == 1) {
                 cell[i] = 3;
                 break;
-            } else if(cell[i] == cell[i+1] && cell[i] >= 3) {
-                if(cell[i] != 14) {
+            } else if (cell[i] == cell[i + 1] && cell[i] >= 3) {
+                if (cell[i] != 14) {
                     cell[i]++;
                 }
                 break;
             }
         }
 
-        if(i == 1) continue;
+        if (i == 1) continue;
 
         cell[1] = 0;
 
-        row_t result = row_t((cell[0] <<  0) |
-                             (cell[1] <<  4));
+        row_t result = row_t((cell[0] << 0) |
+                             (cell[1] << 4));
 
         row_t rev_result = reverse_col(result);
         unsigned rev_col = reverse_col(col);
 
-        col_up_table  [    col] = unpack_col(col)       ^ unpack_col(result);
-        col_down_table[rev_col] = unpack_col(rev_col)   ^ unpack_col(rev_result);
+        col_up_table[col] = unpack_col(col) ^ unpack_col(result);
+        col_down_table[rev_col] = unpack_col(rev_col) ^ unpack_col(rev_result);
     }
 }
